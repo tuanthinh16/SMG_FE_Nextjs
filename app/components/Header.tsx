@@ -1,16 +1,18 @@
 // Header.tsx
 'use client'
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 const Header: React.FC = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const nav = useRouter();
-    const token = sessionStorage.getItem('token');
-    function handleLogout(): void {
-        sessionStorage.removeItem("token");
-    }
-
+    const handleLogout = () => {
+        signOut({ callbackUrl: '/' });
+    };
+    const { data: session } = useSession();
+    const token = session?.accessToken;
+    // console.log(session);
     return (
         <div className="bg-white shadow p-4 flex justify-between items-center">
             <div className="text-xl font-bold cursor-pointer" onClick={() => nav.push("/")}>Dra+</div>

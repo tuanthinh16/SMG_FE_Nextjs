@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchPlugins } from '../api/plugins-query';
 import { PLUGINS } from '../models/Plugins';
-import { getDataFromDB, saveDataToDB } from '../lib/indexDB';
+import { getDataFromDB, saveOrUpdateDataInDB } from '../lib/indexDB';
 
 
 
@@ -32,13 +32,13 @@ const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
                 PLUGIN_LINK: "SMG.Plugins.ListPlugins",
                 IS_ACTIVE: true,
                 ICON: undefined,
-                PLUGIN_TYPE_ID: 2
+                PLUGIN_TYPE_ID: 1
             };
 
             const allPlugins = [defaultPlugin, ...plugin['plugins']];
             setPlugins(allPlugins);
             // Save data to IndexedDB
-            await saveDataToDB('plugins', allPlugins);
+            await saveOrUpdateDataInDB('plugins', allPlugins);
         }
 
     };

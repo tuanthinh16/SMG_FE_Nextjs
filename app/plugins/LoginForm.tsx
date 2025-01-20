@@ -1,6 +1,5 @@
 'use client'
 import React, { useState } from 'react';
-import { onLogin } from '../api/login';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
@@ -19,9 +18,16 @@ const LoginForm = () => {
     };
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const result = await onLogin(username, password);
-        if (result) {
-            sessionStorage.setItem('token', result.access_token);
+        const result = await signIn('credentials', {
+            redirect: false,
+            username,
+            password,
+        });
+        if (result?.error) {
+            console.error('Login failed:', result.error);
+        } else {
+            console.log('Login successful. ', result);
+
             nav.push("/");
         }
     }

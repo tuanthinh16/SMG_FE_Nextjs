@@ -1,12 +1,12 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { createClothes } from '../api/clothes';
-import UsernameComponent from '../lib/processToken';
+import { useUsernameFromCookiesToken } from '../lib/processToken';
 import { DateTimeHelper } from '../lib/DateTimeHelper';
 import { uploadMultipleImages } from '../api/uploadImage';
 import { CLOTHES_TYPE } from '../models/ClothesType';
 import { getClothesTypes } from '../api/clothes-type';
-import { getDataFromDB, saveDataToDB } from '../lib/indexDB';
+import { getDataFromDB, saveOrUpdateDataInDB } from '../lib/indexDB';
 import Alert from '../lib/alert';
 
 
@@ -49,15 +49,16 @@ const ImportForm = () => {
             console.log('Data fetched from server');
             setClothesType(clothesType['clothesTypes']);
             // Save data to IndexedDB
-            await saveDataToDB('clothesTypes', clothesType['clothesTypes']);
+            await saveOrUpdateDataInDB('clothesTypes', clothesType['clothesTypes']);
         }
     };
+    const username = useUsernameFromCookiesToken();
     useEffect(() => {
 
 
         fetchDataClothesType();
     }, []);
-    const username = UsernameComponent();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({
@@ -111,7 +112,7 @@ const ImportForm = () => {
                 requestDescription: formData.requestDescription,
                 requestStatus: "Chưa Duyệt",
                 requestTime: DateTimeHelper.dateToTimeNumber(new Date().toISOString()),
-                username: username,
+                username: username || '',
                 vat: parseFloat(formData.vat),
             };
             const result = await createClothes(input);
@@ -136,7 +137,7 @@ const ImportForm = () => {
     };
 
     return (
-        <div className="container h-svh m-auto p-6 bg-white shadow-lg rounded-lg">
+        <div className="container min-h-svh m-auto p-6 bg-white shadow-lg rounded-lg">
             {/* Hiển thị thông báo snackbar nếu có */}
             <Alert visible={alertVisible} message={alertMessage} color={alertColor} />
             <h1 className="text-3xl font-bold mb-6 text-center">Create Clothes</h1>
@@ -340,7 +341,7 @@ const ImportForm = () => {
                             type="text"
                             name="username"
                             disabled
-                            value={username}
+                            value={username || ''}
                             onChange={handleChange}
                             className="w-full p-2 border border-gray-300 rounded"
                         />
