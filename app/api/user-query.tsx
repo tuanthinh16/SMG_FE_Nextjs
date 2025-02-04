@@ -74,7 +74,7 @@ const UserMutations = {
         }
     `,
     DELETE_USER: `
-        mutation DeleteUser($id: ID!) {
+        mutation DeleteUser($id: Long) {
             deleteUser(id: $id) {
                 success
             }
@@ -82,7 +82,7 @@ const UserMutations = {
     `,
     UPDATE_USER: `
         mutation UpdateUser(
-            $id: ID!
+            $id: Long
             $address: String
             $email: String
             $fullname: String

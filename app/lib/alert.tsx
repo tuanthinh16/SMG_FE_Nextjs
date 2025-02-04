@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface AlertProps {
     visible: boolean;
@@ -7,7 +7,19 @@ interface AlertProps {
 }
 
 const Alert: React.FC<AlertProps> = ({ visible, message, color }) => {
-    if (!visible) return null;
+    const [isVisible, setIsVisible] = useState(visible);
+
+    useEffect(() => {
+        if (visible) {
+            setIsVisible(true);
+            const timer = setTimeout(() => {
+                setIsVisible(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [visible]);
+
+    if (!isVisible) return null;
 
     return (
         <div style={{

@@ -5,5 +5,6 @@ export class PLUGINS {
     IS_ACTIVE: boolean | undefined;
     ICON: string | undefined;
     PLUGIN_TYPE_ID: number | undefined;
+    PLUGIN_GROUP_ID: number | undefined;
     // Add other fields as needed
 }

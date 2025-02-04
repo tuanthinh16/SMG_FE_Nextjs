@@ -1,9 +1,11 @@
+import { AxiosError } from 'axios';
+import { PLUGINS } from '../models/Plugins';
 import Api from './api';
 
 const api = new Api();
 
 const PluginQueries = {
-    GET_PLUGINS: `
+  GET_PLUGINS: `
     query Plugins {
       plugins {
         ID
@@ -20,8 +22,8 @@ const PluginQueries = {
       }
     }
   `,
-    GET_PLUGIN_BY_ID: `
-    query PluginById($id: ID!) {
+  GET_PLUGIN_BY_ID: `
+    query PluginById($id: Long) {
       pluginById(id: $id) {
         ID
         CREATE_TIME
@@ -40,13 +42,13 @@ const PluginQueries = {
 };
 
 const PluginMutations = {
-    CREATE_PLUGIN: `
+  CREATE_PLUGIN: `
     mutation CreatePlugin(
       $ICON: String
-      $PLUGIN_GROUP_ID: ID
+      $PLUGIN_GROUP_ID: Long
       $PLUGIN_LINK: String
       $PLUGIN_NAME: String
-      $PLUGIN_TYPE_ID: ID
+      $PLUGIN_TYPE_ID: Int
     ) {
       createPlugins(
         ICON: $ICON
@@ -59,15 +61,15 @@ const PluginMutations = {
       }
     }
   `,
-    UPDATE_PLUGIN: `
+  UPDATE_PLUGIN: `
     mutation UpdatePlugin(
-      $id: ID!
+      $id: Long
       $ICON: String
       $IS_ACTIVE: Boolean
-      $PLUGIN_GROUP_ID: ID
+      $PLUGIN_GROUP_ID: Long
       $PLUGIN_LINK: String
       $PLUGIN_NAME: String
-      $PLUGIN_TYPE_ID: ID
+      $PLUGIN_TYPE_ID: Int
     ) {
       updatePlugins(
         id: $id
@@ -82,60 +84,142 @@ const PluginMutations = {
       }
     }
   `,
+  DELETE_PLUGIN: `
+    mutation DeletePlugin($id: Long) {
+      deletePlugins(id: $id) {
+        success
+      }
+    }
+  `,
 };
 
 export const fetchPlugins = async () => {
-    try {
-        const res = await api.query(PluginQueries.GET_PLUGINS);
-        return res;
-    } catch (error) {
-        console.error('Error fetching plugins:', error);
-        throw error;
+  try {
+    const res = await api.query(PluginQueries.GET_PLUGINS);
+    return res;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+
+    // Now you can safely access 'response' and 'responseText'
+    if (axiosError.response) {
+      console.error('Error fetchPlugins :', axiosError.response.data);
+    } else {
+      console.error('Error fetchPlugins:', axiosError.message);
     }
+    throw error;
+  }
 };
 
 export const fetchPluginById = async (id: number) => {
-    try {
-        const res = await api.query(PluginQueries.GET_PLUGIN_BY_ID, { id });
-        return res;
-    } catch (error) {
-        console.error('Error fetching plugin by ID:', error);
-        throw error;
+  try {
+    const res = await api.query(PluginQueries.GET_PLUGIN_BY_ID, { id });
+    return res;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+
+    // Now you can safely access 'response' and 'responseText'
+    if (axiosError.response) {
+      console.error('Error fetchPluginById:', axiosError.response.data);
+    } else {
+      console.error('Error fetchPluginById:', axiosError.message);
     }
+    throw error;
+  }
 };
 
-export const createPlugin = async (input: {
-    ICON: string;
-    PLUGIN_GROUP_ID: string;
-    PLUGIN_LINK: string;
-    PLUGIN_NAME: string;
-    PLUGIN_TYPE_ID: string;
-}) => {
-    try {
-        const res = await api.mutate(PluginMutations.CREATE_PLUGIN, input);
-        return res;
-    } catch (error) {
-        console.error('Error creating plugin:', error);
-        throw error;
+export const createPlugin = async (input: PLUGINS, token?: string) => {
+  try {
+    const validFields = [
+      'ICON',
+      'IS_ACTIVE',
+      'PLUGIN_GROUP_ID',
+      'PLUGIN_LINK',
+      'PLUGIN_NAME',
+      'PLUGIN_TYPE_ID',
+    ];
+    const transformedInput = validateAndTransformInput(input, validFields);
+
+    const res = await api.mutate(PluginMutations.CREATE_PLUGIN, transformedInput, token);
+    return res;
+  } catch (error) {
+    // Type cast error to AxiosError
+    const axiosError = error as AxiosError;
+
+    // Now you can safely access 'response' and 'responseText'
+    if (axiosError.response) {
+      console.error('Error Create plugin:', axiosError.response.data);
+    } else {
+      console.error('Error Create plugin:', axiosError.message);
     }
+    throw error;
+  }
 };
 
 export const updatePlugin = async (
-    id: number,
-    input: {
-        ICON: string;
-        IS_ACTIVE: boolean;
-        PLUGIN_GROUP_ID: string;
-        PLUGIN_LINK: string;
-        PLUGIN_NAME: string;
-        PLUGIN_TYPE_ID: string;
-    }
+  id: number,
+  input: PLUGINS, token?: string
 ) => {
-    try {
-        const res = await api.mutate(PluginMutations.UPDATE_PLUGIN, { id, ...input });
-        return res;
-    } catch (error) {
-        console.error('Error updating plugin:', error);
-        throw error;
+  try {
+    const validFields = [
+      'ICON',
+      'IS_ACTIVE',
+      'PLUGIN_GROUP_ID',
+      'PLUGIN_LINK',
+      'PLUGIN_NAME',
+      'PLUGIN_TYPE_ID',
+    ];
+    const transformedInput = validateAndTransformInput(input, validFields);
+    const res = await api.mutate(PluginMutations.UPDATE_PLUGIN, { id, ...transformedInput }, token);
+    return res;
+  } catch (error) {
+    // Type cast error to AxiosError
+    const axiosError = error as AxiosError;
+
+    // Now you can safely access 'response' and 'responseText'
+    if (axiosError.response) {
+      console.error('Error updatePlugin:', axiosError.response.data);
+    } else {
+      console.error('Error updatePlugin:', axiosError.message);
     }
+    throw error;
+
+  }
+};
+export const deletePlugin = async (id: number, token?: string) => {
+  try {
+    const res = await api.mutate(PluginMutations.DELETE_PLUGIN, { id }, token);
+    return res;
+  } catch (error) {
+    // Type cast error to AxiosError
+    const axiosError = error as AxiosError;
+
+    // Now you can safely access 'response' and 'responseText'
+    if (axiosError.response) {
+      console.error('Error deletePlugin:', axiosError.response.data);
+    } else {
+      console.error('Error deletePlugin:', axiosError.message);
+    }
+    throw error;
+  }
+};
+const validateAndTransformInput = (input: PLUGINS, validFields: string[]) => {
+
+
+  const transformedInput: Record<string, unknown> = {};
+
+  validFields.forEach((field) => {
+    if (input[field as keyof PLUGINS] !== undefined) {
+      if (field === 'PLUGIN_GROUP_ID' || field === 'PLUGIN_TYPE_ID') {
+        // Do not convert to Int, keep as Long
+        transformedInput[field] = input[field as keyof PLUGINS];
+      } else if (field === 'id') {
+        // For the ID field, ensure it's a Long
+        transformedInput[field] = input[field as keyof PLUGINS];
+      } else {
+        transformedInput[field] = input[field as keyof PLUGINS];
+      }
+    }
+  });
+
+  return transformedInput;
 };

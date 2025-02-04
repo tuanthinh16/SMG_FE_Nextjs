@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { fetchPlugins } from '../api/plugins-query';
 import { PLUGINS } from '../models/Plugins';
 import { getDataFromDB, saveOrUpdateDataInDB } from '../lib/indexDB';
@@ -8,9 +8,11 @@ import { getDataFromDB, saveOrUpdateDataInDB } from '../lib/indexDB';
 
 interface MenuProps {
     onPluginClick: (plugin: PLUGINS | undefined) => void;
+    selectedPluginID: number | null;
 }
-const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
+const Menu: React.FC<MenuProps> = ({ onPluginClick, selectedPluginID }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [selectedPluginId, setSelectedPluginId] = useState<number | null>(selectedPluginID);
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
@@ -32,7 +34,8 @@ const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
                 PLUGIN_LINK: "SMG.Plugins.ListPlugins",
                 IS_ACTIVE: true,
                 ICON: undefined,
-                PLUGIN_TYPE_ID: 1
+                PLUGIN_TYPE_ID: 1,
+                PLUGIN_GROUP_ID: 1,
             };
 
             const allPlugins = [defaultPlugin, ...plugin['plugins']];
@@ -42,6 +45,7 @@ const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
         }
 
     };
+    const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
 
@@ -49,14 +53,33 @@ const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen, setIsOpen]);
     function handleClickPlugins(plugin: PLUGINS | undefined): void {
+        setSelectedPluginId(plugin?.ID || null);
+        console.log(plugin?.ID);
         onPluginClick(plugin);
     }
 
     return (
-        <div>
+        <div ref={modalRef} className='z-50 '>
             <button
-                className="md:hidden fixed top-4 right-4 p-2 rounded"
+                className="md:hidden fixed top-4 right-2 p-2 rounded"
                 onClick={toggleMenu}
             >
                 {isOpen ? (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
@@ -72,18 +95,28 @@ const Menu: React.FC<MenuProps> = ({ onPluginClick }) => {
                     {isOpen ? 'Close Menu' : 'Open Menu'}
                 </span>
             </button>
-            <aside className={` w-30 md:w-64 p-4 h-screen shadow-md fixed md:relative ${isOpen ? 'block absolute right-0' : 'hidden'} md:block`}>
+            <div className={`bg-gradient-to-br from-blue-600 to-teal-500 bg-opacity-60 text-white w-30 md:w-64 p-4 h-screen shadow-md fixed md:relative ${isOpen ? 'block absolute right-0' : 'hidden'} md:block`}>
                 <nav>
                     <ul className="space-y-4">
                         {plugins?.map((plugin: PLUGINS, index: number) => (
-                            <li key={index}><button onClick={() => handleClickPlugins(plugin)} className="text-gray-700 hover:text-blue-500 hover:font-bold hover:translate-x-2">
-                                {plugin.PLUGIN_NAME}
-                            </button></li>
-                        ))}
+                            <li key={index}>
+                                <button
+                                    onClick={() => handleClickPlugins(plugin)}
+                                    className={`md:text-gray-50 flex gap-3 hover:animate-pulse hover:font-bold hover:translate-x-2 ${selectedPluginId === plugin.ID && 'animate-pulse'}`}
+                                >
+                                    {(selectedPluginId === plugin.ID || (plugin.ID == 0 && selectedPluginID == 0)) && (
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                                            <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
+                                        </svg>
+                                    )}
 
+                                    {plugin.PLUGIN_NAME}
+                                </button>
+                            </li>
+                        ))}
                     </ul>
                 </nav>
-            </aside>
+            </div>
         </div>
     );
 };

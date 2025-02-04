@@ -12,9 +12,11 @@ import Alert from '../lib/alert';
 
 
 const ImportForm = () => {
+    //Alert state
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertColor, setAlertColor] = useState('green');
+    //Object state
     const [clothesType, setClothesType] = useState<CLOTHES_TYPE[]>([]);
     const [formData, setFormData] = useState({
         amount: '',
@@ -118,20 +120,16 @@ const ImportForm = () => {
             const result = await createClothes(input);
             console.log('CreateClothes result:', result);
             // Hiển thị thông báo thành công
-            setAlertMessage("Xử lý thành công!");
-            setAlertVisible(true);
-            setAlertColor('green');
-            // Tự động ẩn thông báo sau 2 giây
-            setTimeout(() => {
-                setAlertVisible(false);
-            }, 2000);
+            if (result) {
+                setAlertMessage("Xử lý thành công!");
+                setAlertVisible(true);
+                setAlertColor('green');
+            }
+
         } catch (error) {
             setAlertMessage("Xử lý thất bại!");
             setAlertVisible(true);
             setAlertColor('red');
-            setTimeout(() => {
-                setAlertVisible(false);
-            }, 5000);
             console.error('Error creating clothes:', error);
         }
     };

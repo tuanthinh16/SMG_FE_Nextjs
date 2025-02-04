@@ -1,15 +1,15 @@
 import axios from "axios";
-import { URL_BASE } from "../config";
+import { URL_BASE, URL_PORT } from "../config";
 
 class Api {
     private baseUrl: string;
 
     constructor() {
-        this.baseUrl = `http://${URL_BASE}:5000/api/v1/`;
+        this.baseUrl = `http://${URL_BASE}:${URL_PORT}/api/v1/`;
     }
 
-    private async request(query: string, variables: Record<string, unknown> = {}) {
-        const token = sessionStorage.getItem("token");
+    private async request(query: string, variables: Record<string, unknown> = {}, token?: string) {
+
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
         };
@@ -41,8 +41,8 @@ class Api {
         return this.request(query, variables);
     }
 
-    public async mutate(mutation: string, variables: Record<string, unknown> = {}) {
-        return this.request(mutation, variables);
+    public async mutate(mutation: string, variables: Record<string, unknown> = {}, token?: string) {
+        return this.request(mutation, variables, token);
     }
 }
 
